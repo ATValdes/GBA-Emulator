@@ -1,0 +1,62 @@
+#include "ArmCpu.hpp"
+#include "ArmConstants.hpp"
+
+#include <iostream>
+#include <cstdint>
+#include <array>
+
+
+ArmCpu::ArmCpu(Bus& bus) : bus(bus) {}
+
+static void fallback_unimplemented(ArmCpu& cpu, uint32_t opcode) {
+    std::cout << "Unimplemented ARM instruction! Opcode: 0x"
+              << std::hex << opcode << " (Index: " ")\n";
+    // cpu.registers[15] += 4;
+}
+
+void ArmCpu::set_nzcv(uint32_t result, bool carry, bool overflow) {
+    bool n_flag = (result >> 31) & 1;
+    bool z_flag = (result == 0);
+    
+    cpsr &= 0x0FFFFFFF; // Clear N, Z, C, V bits
+    cpsr |= (static_cast<uint32_t>(n_flag) << 31);
+    cpsr |= (static_cast<uint32_t>(z_flag) << 30);
+    cpsr |= (static_cast<uint32_t>(carry) << 29);
+    cpsr |= (static_cast<uint32_t>(overflow) << 28);
+}
+
+
+uint32_t ArmCpu::read_register(uint8_t register_number) {
+    return registers[register_number];
+}
+
+void ArmCpu::write_register(uint8_t register_number, uint32_t value) {
+    registers[register_number] = value;
+}
+
+uint32_t ArmCpu::get_cpsr() {
+    return cpsr;
+}
+
+uint8_t ArmCpu::get_current_mode() {
+    return current_mode;
+}
+
+void ArmCpu::exception_return(uint32_t address) {
+    // Check whether the current mode has an SPSR.
+    if (get_current_mode() != ArmConstants::USER_MODE) {
+        // Handle architecturally invalid/unpredictable usage.
+        return;
+    }
+
+    // Save the return status before changing modes.
+    uint32_t restored_cpsr = get_spsr();
+
+    // Restore the complete CPSR.
+    set_cpsr(restored_cpsr);
+
+    // Branch to the return address.
+    write_pc(address);
+
+    // Reconfigure banked registers if necessary.
+}
