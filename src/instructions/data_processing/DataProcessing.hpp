@@ -1,12 +1,11 @@
 #pragma once
 
-#include "ArmCpu.hpp"
+#include "cpu/ArmCpu.hpp"
 #include "InstructionTypes.hpp"
 
 class ArmCpu;
 
 namespace DataProcessing {
-
     struct ALUResult {
         uint32_t result;
         bool carry;
@@ -20,10 +19,11 @@ namespace DataProcessing {
         ORR = 0xC, MOV = 0xD, BIC = 0xE, MVN = 0xF
     };
 
-    ArmInstructionHandler get_data_proc_handler(OpcodeType operation);
-
+    // shifter_carry: carry-out of the barrel shifter (used by logical ops).
+    // carry_flag:    current C flag of the CPSR (used by ADC / SBC / RSC).
+    // old_overflow:  current V flag (logical ops leave it unchanged).
     template <OpcodeType Operation>
-    ALUResult execute_alu(uint32_t op1, uint32_t op2, bool carry_in, bool old_overflow);
+    ALUResult execute_alu(uint32_t op1, uint32_t op2, bool shifter_carry, bool carry_flag, bool old_overflow);
 
     template <OpcodeType Operation>
     void apply_alu_result(ArmCpu& cpu, uint8_t Rd, bool set_flags, const ALUResult& alu);

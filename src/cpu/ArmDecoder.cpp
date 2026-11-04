@@ -1,7 +1,7 @@
 #include "ArmDecoder.hpp"
 
 #include "ArmCpu.hpp"
-#include "DataProcessing.hpp"
+#include "instructions/data_processing/DataProcessing.hpp"
 
 static constexpr uint16_t get_index(uint32_t opcode) {
     // Extract bits 27-20

@@ -8,7 +8,9 @@
 
 ArmCpu::ArmCpu(Bus& bus) : bus(bus) {}
 
-static void fallback_unimplemented(ArmCpu& cpu, uint32_t opcode) {
+ArmCpu::~ArmCpu() = default;
+
+void ArmCpu::fallback_unimplemented(ArmCpu& cpu, uint32_t opcode) {
     std::cout << "Unimplemented ARM instruction! Opcode: 0x"
               << std::hex << opcode << " (Index: " ")\n";
     // cpu.registers[15] += 4;
@@ -26,7 +28,7 @@ void ArmCpu::set_nzcv(uint32_t result, bool carry, bool overflow) {
 }
 
 
-uint32_t ArmCpu::read_register(uint8_t register_number) {
+uint32_t ArmCpu::read_register(uint8_t register_number) const {
     return registers[register_number];
 }
 
@@ -34,12 +36,25 @@ void ArmCpu::write_register(uint8_t register_number, uint32_t value) {
     registers[register_number] = value;
 }
 
-uint32_t ArmCpu::get_cpsr() {
+uint32_t ArmCpu::get_cpsr() const {
     return cpsr;
 }
 
-uint8_t ArmCpu::get_current_mode() {
+uint32_t ArmCpu::get_spsr() const {
+    return spsr;
+}
+
+void ArmCpu::set_cpsr(uint32_t value) {
+    cpsr = value;
+    current_mode = value & 0x1F;            // mode bits; add register banking here later
+}
+
+uint8_t ArmCpu::get_current_mode() const {
     return current_mode;
+}
+
+void ArmCpu::write_pc(uint32_t address) {
+    registers[15] = address & ~3u;          // ARM: word-aligned; add the pipeline flush here later
 }
 
 void ArmCpu::exception_return(uint32_t address) {
